@@ -1,5 +1,9 @@
 #include "utils.h"
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 int
 Utils::read_32_bits_high_low(std::ifstream* in)
 {
@@ -7,9 +11,9 @@ Utils::read_32_bits_high_low(std::ifstream* in)
 
     in->read(bytes, 4);
 
-    int32_t const low = bytes[3];
-    int32_t const midl = bytes[2];
-    int32_t const midh = bytes[1];
+    int32_t const low = (unsigned char)bytes[3];
+    int32_t const midl = (unsigned char)bytes[2];
+    int32_t const midh = (unsigned char)bytes[1];
     int32_t const high = (signed char)(bytes[0]);
 
     return (high << 24) | (midh << 16) | (midl << 8) | low;
@@ -22,9 +26,9 @@ Utils::read_32_bits_low_high(std::ifstream* in)
 
     in->read(bytes, 4);
 
-    int32_t const low = bytes[0];
-    int32_t const midl = bytes[1];
-    int32_t const midh = bytes[2];
+    int32_t const low = (unsigned char)bytes[0];
+    int32_t const midl = (unsigned char)bytes[1];
+    int32_t const midh = (unsigned char)bytes[2];
     int32_t const high = (signed char)(bytes[3]);
 
     return (high << 24) | (midh << 16) | (midl << 8) | low;
@@ -37,7 +41,7 @@ Utils::read_16_bits_low_high(std::ifstream* in)
 
     in->read(bytes, 2);
 
-    int32_t const low = bytes[0];
+    int32_t const low = (unsigned char)bytes[0];
     int32_t const high = (signed char)(bytes[1]);
 
     return (high << 8) | low;
@@ -67,7 +71,7 @@ bool
 Utils::isWAV(std::string file)
 {
     if (file.size() < 5) {
-        /* 
+        /*
          * minimum length of filename will be 5 assuming that the filename
          * contains the extension ".wav"
          */

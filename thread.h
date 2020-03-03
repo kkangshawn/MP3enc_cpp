@@ -6,7 +6,7 @@
 
 class Thread {
 public:
-	Thread() : m_thread(0) {}
+	Thread() : m_thread(0), m_is_running(false) {}
 
 	void start();
 	void join();
@@ -17,6 +17,7 @@ private:
    	}
 
 	pthread_t m_thread;
+    bool m_is_running;
 };
 
 #endif

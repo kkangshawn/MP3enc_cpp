@@ -1,32 +1,28 @@
 #include "common.h"
 #include "thread.h"
 #include "utils.h"
+#include "audio.h"
 
 #include <dirent.h>
 
 using namespace std;
 
-class MP3enc : public Thread, Utils, DEBUG {
+class MP3enc : public Utils, DEBUG {
 public:
     static MP3enc* getInstance(int argc, char** argv);
     static int main(int argc, char** argv);
     void freeInstance();
     void showUsage();
-    void run() {
-        //checkPath(m_opt.inPath);
-    }
 
 private:
-    enum QUALITY_LEVEL { QL_FAST, QL_STANDARD, QL_BEST };
     struct Options {
         string          inPath;
         string          outPath;
         bool            recursive;
-        QUALITY_LEVEL   quality;
         bool            verbose;
     };
 
-    MP3enc() : m_opt{ {}, {}, false, QL_STANDARD, false } {}
+    MP3enc() : m_opt{ {}, {}, false, false } {}
     virtual ~MP3enc() {}
 
     bool parseOption(int argc, char** argv);
@@ -128,11 +124,11 @@ MP3enc::parseOption(int argc, char** argv)
                 return false;
             }
             if (!scmp(argv[i], "fast")) {
-                m_opt.quality = QL_FAST;
+                AudioData::set_quality(AudioData::QL_FAST);
             } else if (!scmp(argv[i], "standard")) {
-                m_opt.quality = QL_STANDARD;
+                AudioData::set_quality(AudioData::QL_STANDARD);
             } else if (!scmp(argv[i], "best")) {
-                m_opt.quality = QL_BEST;
+                AudioData::set_quality(AudioData::QL_BEST);
             } else {
                 cerr << "ERROR: Wrong mode for quality level. Please see below usage:" << endl;
                 m_instance->showUsage();
@@ -172,10 +168,13 @@ MP3enc::checkPath(string path)
             cerr << "ERROR: Failed to find " << path << endl;
             return;
         }
-        cout << "Open " << path << endl;
+        AudioData adata(path, m_opt.outPath);
+        adata.start();
+        adata.join();
         return;
     }
 
+    vector<AudioData*> v;
     while ((dir_ent = readdir(dir)) != NULL) {
         string fullPath = path + DELIMITER + dir_ent->d_name;
         switch (dir_ent->d_type) {
@@ -186,7 +185,13 @@ MP3enc::checkPath(string path)
             break;
         case DT_REG:
             if (isWAV(dir_ent->d_name)) {
-                cout << "Open " << fullPath << "[f]" << endl;
+                if (!m_opt.outPath.empty()) {
+                    m_opt.outPath.clear();
+                    DEBUG::WARN("Output filename(-o) option is ignored in case of decoding directory");
+                }
+                AudioData* adata = new AudioData(fullPath, m_opt.outPath);
+                adata->start();
+                v.push_back(adata);
             }
             break;
         case DT_LNK:
@@ -195,12 +200,18 @@ MP3enc::checkPath(string path)
             break;
         }
     }
+    for (AudioData* d : v) {
+        d->join();
+        delete d;
+    }
     closedir(dir);
 }
 
 int MP3enc::main(int argc, char** argv)
 {
     cout << "MP3enc_cpp v" << VERSION << endl;
+
+    clock_t t = clock();
 
     MP3enc* mp3enc = MP3enc::getInstance(argc, argv);
 
@@ -209,10 +220,11 @@ int MP3enc::main(int argc, char** argv)
         return 1;
     }
 
-    mp3enc->start();
-    mp3enc->join();
-
     mp3enc->freeInstance();
+
+    t = clock() - t;
+    double elapsed = (double)t / CLOCKS_PER_SEC;
+    cout << "elapsed " << fixed << elapsed << "s" << endl;
 
     return 0;
 }

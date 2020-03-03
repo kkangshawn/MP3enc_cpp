@@ -4,14 +4,15 @@ OBJS = \
 	   thread.o \
 	   debug.o \
 	   utils.o \
+	   audio.o \
 	   main.o 
-OBJ_FLAGS = -lpthread -static
-
+CPP_FLAGS = -std=c++11
+OBJ_FLAGS = -Llib -lpthread -lmp3lame -static
 ALL = MP3enc_cpp
 all: $(ALL)
 
 %.o: %.cpp
-	@$(CC) -c -o $@ $<
+	@$(CC) $(CPP_FLAGS) -c -o $@ $<
 	@echo " CC " $<
 
 $(PROG): $(OBJS)

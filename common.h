@@ -7,11 +7,7 @@
 
 #include "debug.h"
 
-#if __cplusplus >= 201703L
-#define CPP17
-#endif
-
-#define VERSION "0.7"
+#define VERSION "0.8"
 enum { OK = 0, N_OK };
 
 #endif

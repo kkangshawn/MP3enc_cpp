@@ -10,6 +10,7 @@ protected:
     static void INFO(const char* s) { if (verbose) std::cout << "DEBUG(INFO): " << s << std::endl; }
     static void SET() { verbose = true; }
     static void CLEAR() { verbose = false; }
+    static bool IS_SET() { return verbose; }
 private:
     static bool verbose;
 };

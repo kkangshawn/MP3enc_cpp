@@ -14,6 +14,7 @@ private:
 	virtual void run() {}
 	static void* run_(void* p) {
 		((Thread*)p)->run();
+        return NULL;
    	}
 
 	pthread_t m_thread;

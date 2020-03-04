@@ -125,10 +125,13 @@ MP3enc::parseOption(int argc, char** argv)
             }
             if (!scmp(argv[i], "fast")) {
                 AudioData::set_quality(AudioData::QL_FAST);
+                DEBUG::INFO("Quality level: FAST");
             } else if (!scmp(argv[i], "standard")) {
                 AudioData::set_quality(AudioData::QL_STANDARD);
+                DEBUG::INFO("Quality level: STANDARD");
             } else if (!scmp(argv[i], "best")) {
                 AudioData::set_quality(AudioData::QL_BEST);
+                DEBUG::INFO("Quality level: BEST");
             } else {
                 cerr << "ERROR: Wrong mode for quality level. Please see below usage:" << endl;
                 m_instance->showUsage();

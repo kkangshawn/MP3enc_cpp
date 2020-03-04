@@ -7,7 +7,6 @@
 
 #include "debug.h"
 
-#define VERSION "0.8"
-enum { OK = 0, N_OK };
+#define VERSION "0.9"
 
 #endif

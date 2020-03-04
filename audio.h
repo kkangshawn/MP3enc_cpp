@@ -95,7 +95,7 @@ private:
     int             m_pcmbitwidth;
     PcmBuffer       m_pcm32;
     PcmBuffer       m_pcm16;
-    int             m_num_samples_read;
+    unsigned int    m_num_samples_read;
     ReaderConfig    m_rconfig;
     static QUALITY_LEVEL encoding_quality;
 

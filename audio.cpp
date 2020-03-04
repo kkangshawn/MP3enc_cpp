@@ -3,20 +3,21 @@
 #include <sstream>
 #include <cstring>
 
-const int MAX_U_32_NUM = 0xFFFFFFFF;
+const unsigned int MAX_U_32_NUM = 0xFFFFFFFF;
 AudioData::QUALITY_LEVEL AudioData::encoding_quality = QL_STANDARD;
 
 int
 AudioData::unpack_read_samples(ifstream* ifs, int* sample_buffer,
         int samples_to_read, const int bytes_per_sample, const int swap_order)
 {
-    size_t samples_read;
-    int* op;
-    unsigned char* ip = (unsigned char*)sample_buffer;
-    const int b = sizeof(int) * 8;
-    int i;
+    size_t          samples_read;
+    int*            op;
+    unsigned char*  ip = (unsigned char*)sample_buffer;
+    const int       b = sizeof(int) * 8;
+    int             i;
 
-    samples_read = ifs->read((char*)sample_buffer, bytes_per_sample * samples_to_read).gcount() / bytes_per_sample;
+    samples_read = ifs->read((char*)sample_buffer, bytes_per_sample * samples_to_read).gcount();
+    samples_read /= bytes_per_sample;
     op = sample_buffer + samples_read;
 
 #define GA_URS_IFLOOP( ga_urs_bps ) \
@@ -46,8 +47,8 @@ AudioData::unpack_read_samples(ifstream* ifs, int* sample_buffer,
 
     if (m_pcm_is_ieee_float) {
         float const m_max = INT32_MAX;
-        float const m_min = -(float) INT32_MIN;
-        float* x = (float*)sample_buffer;
+        float const m_min = -(float)INT32_MIN;
+        float*      x = (float*)sample_buffer;
 
         if (sizeof(float) != sizeof(int)) {
             cerr << "ERROR: float size mismatch!!!" << endl;
@@ -100,13 +101,13 @@ AudioData::read_samples_pcm(ifstream* ifs, int sample_buffer[2 * SAMPLE_SIZE], i
 int
 AudioData::get_audio_common(lame_t gf, int buffer[2][SAMPLE_SIZE])
 {
-    int num_channels = lame_get_num_channels(gf);
-    int frame_size = lame_get_framesize(gf);
-    unsigned int tmp_num_samples = lame_get_num_samples(gf);
-    unsigned int remaining = 0;
-    int samples_read;
-    int insample[2 * SAMPLE_SIZE];
-    int *pidx;
+    int             num_channels = lame_get_num_channels(gf);
+    int             frame_size = lame_get_framesize(gf);
+    unsigned int    tmp_num_samples = lame_get_num_samples(gf);
+    unsigned int    remaining = 0;
+    int             samples_read;
+    int             insample[2 * SAMPLE_SIZE];
+    int*            pidx;
 
     if (num_channels < 1 || 2 < num_channels ||
         frame_size < 1 || SAMPLE_SIZE < frame_size) {
@@ -161,7 +162,6 @@ AudioData::get_audio(lame_t gf, int buffer[2][SAMPLE_SIZE])
 {
     int read = 0;
     int used = 0;
-    int ret = 0;
 
     do {
         read = get_audio_common(gf, buffer);
@@ -195,10 +195,11 @@ AudioData::run()
 void*
 AudioData::lame_encoder_loop(void* data)
 {
-    int iread;
-    int imp3;
-    int buf[2][SAMPLE_SIZE];
-    unsigned char mp3buf[LAME_MAXMP3BUFFER];
+    int             iread;
+    int             imp3;
+    size_t          tagsize;
+    int             buf[2][SAMPLE_SIZE];
+    unsigned char   mp3buf[LAME_MAXMP3BUFFER];
 
     for (int i = 0; i < LAME_MAXMP3BUFFER; i++) {
         mp3buf[i] = 0;
@@ -268,15 +269,15 @@ AudioData::lame_encoder_loop(void* data)
     }
 
     /* write xing frame */
-    imp3 = lame_get_lametag_frame(m_gf, mp3buf, sizeof(mp3buf));
-    if (imp3 <= 0) {
+    tagsize = lame_get_lametag_frame(m_gf, mp3buf, sizeof(mp3buf));
+    if (tagsize <= 0) {
         DEBUG::INFO("no LAME-tag exists");
-    } else if (imp3 > sizeof(mp3buf)) {
+    } else if (tagsize > sizeof(mp3buf)) {
         DEBUG::INFO("LAME-tag frame exceeds buffer size");
     } else if (m_ofstream->seekp(id3v2_size, std::ios::beg).fail()) {
         DEBUG::WARN("fatal error: can't update LAME-tag frame!");
     } else {
-        if (m_ofstream->write((char*)mp3buf, imp3).fail()) {
+        if (m_ofstream->write((char*)mp3buf, tagsize).fail()) {
             cerr << "ERROR: failed to write LAME-tag" << endl;
         } else {
             cout << "Encoding " << m_outfile << " done" << endl;
@@ -443,26 +444,25 @@ AudioData::parse_file_header(lame_t& gfp)
 int
 AudioData::parse_wave_header(lame_t& gfp)
 {
-    long    file_length = 0;        /* not used */
+/*  long    file_length = 0;        // not used */
     int     type = 0;
     int     format_tag = 0;
     int     channels = 0;
     int     samples_per_sec = 0;
-    int     avg_bytes_per_sec = 0;  /* not used */
-    int     block_align = 0;        /* not used */
+/*  int     avg_bytes_per_sec = 0;  // not used */
+/*  int     block_align = 0;        // not used */
     int     bits_per_sample = 0;
     bool    is_wav = false;
     int     data_length = 0;
     int     sub_size = 0;
-    int     loop_count = 20;
 
-    file_length = read_32_bits_high_low(m_ifstream);    /* file length */
+    /*file_length = */read_32_bits_high_low(m_ifstream);
     if (read_32_bits_high_low(m_ifstream) != WAV_ID_WAVE) {
         return -1;
     }
 
-    for (loop_count; loop_count > 0; --loop_count) {
-        int type = read_32_bits_high_low(m_ifstream);
+    for (int loop_count = 20; loop_count > 0; --loop_count) {
+        type = read_32_bits_high_low(m_ifstream);
 
         if (type == WAV_ID_FMT) {
             sub_size = read_32_bits_low_high(m_ifstream);
@@ -478,9 +478,9 @@ AudioData::parse_wave_header(lame_t& gfp)
             sub_size -= 2;
             samples_per_sec = read_32_bits_low_high(m_ifstream);
             sub_size -= 4;
-            avg_bytes_per_sec = read_32_bits_low_high(m_ifstream);
+            /*avg_bytes_per_sec = */read_32_bits_low_high(m_ifstream);
             sub_size -= 4;
-            block_align = read_16_bits_low_high(m_ifstream);
+            /*block_align = */read_16_bits_low_high(m_ifstream);
             sub_size -= 2;
             bits_per_sample = read_16_bits_low_high(m_ifstream);
             sub_size -= 2;
@@ -637,19 +637,16 @@ AudioData::init(string infile, string outfile)
     }
     switch (AudioData::encoding_quality) {
     case QL_BEST:
-        DEBUG::INFO("Quality level: BEST");
         lame_set_preset(m_gf, INSANE);
         lame_set_quality(m_gf, 0);
         break;
     case QL_FAST:
-        DEBUG::INFO("Quality level: FAST");
         lame_set_force_ms(m_gf, 1);
         lame_set_mode(m_gf, JOINT_STEREO);
         lame_set_quality(m_gf, 7);
         break;
     case QL_STANDARD:
     default:
-        DEBUG::INFO("Quality level: STANDARD");
         lame_set_VBR_q(m_gf, 2);
         lame_set_VBR(m_gf, vbr_default);;
         break;

@@ -655,9 +655,6 @@ AudioData::init(string infile, string outfile)
         break;
     }
 
-    lame_set_VBR_q(m_gf, 2);
-    lame_set_VBR(m_gf, vbr_default);
-
     if (!init_infile(m_gf, infile)) {
         cerr << "ERROR: failed to initialize input file: " << infile << endl;
         return false;

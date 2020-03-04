@@ -1,8 +1,15 @@
+/**
+ * @file        utils.cpp
+ * @version     0.9
+ * @brief       MP3enc_cpp utility functions source
+ * @date        Mar 4, 2020
+ * @author      Siwon Kang (kkangshawn@gmail.com)
+ */
+
 #include "utils.h"
 
 #include <iostream>
 #include <fstream>
-using namespace std;
 
 int
 Utils::read_32_bits_high_low(std::ifstream* in)
@@ -68,7 +75,7 @@ Utils::get_file_size(const char* file)
 }
 
 bool
-Utils::isWAV(std::string file)
+Utils::is_wav(std::string file)
 {
     if (file.size() < 5) {
         /*
@@ -95,5 +102,6 @@ Utils::scmp(const char* a, const char* b) {
     while (*a && *b && !(*a - *b)) {
         a++; b++;
     }
+
     return *a - *b;
 }

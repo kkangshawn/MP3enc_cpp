@@ -1,0 +1,4 @@
+<map id="DEBUG" name="DEBUG">
+<area shape="rect" id="node2" href="$d5/d4a/classAudioData.html" title="class for processing audio data which is strongly involved with LAME library. Many are derived from L..." alt="" coords="5,80,88,107"/>
+<area shape="rect" id="node3" href="$d7/dae/classMP3enc.html" title="main class for MP3enc application. Designed as singleton to prevent from any conflicts by multiple ac..." alt="" coords="113,80,183,107"/>
+</map>

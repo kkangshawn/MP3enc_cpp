@@ -1,0 +1,5 @@
+<map id="AudioData" name="AudioData">
+<area shape="rect" id="node2" href="$d0/d51/classThread.html" title="Thread class using pthread library. This class is supposed to be used by other classes inherit this ..." alt="" coords="5,5,68,32"/>
+<area shape="rect" id="node3" href="$dc/dc5/classUtils.html" title="Class for utility functions. Intended to be used by inheritance. " alt="" coords="92,5,141,32"/>
+<area shape="rect" id="node4" href="$de/d5e/classDEBUG.html" title="DEBUG class for debug print functions. This class is supposed to be used as global functions..." alt="" coords="165,5,236,32"/>
+</map>

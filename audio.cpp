@@ -1,7 +1,17 @@
+/**
+ * @file        audio.cpp
+ * @version     0.9
+ * @brief       MP3enc_cpp audio data module source
+ * @date        Mar 4, 2020
+ * @author      Siwon Kang (kkangshawn@gmail.com)
+ */
+
 #include "audio.h"
 
 #include <sstream>
 #include <cstring>
+
+using namespace std;
 
 const unsigned int MAX_U_32_NUM = 0xFFFFFFFF;
 AudioData::QUALITY_LEVEL AudioData::encoding_quality = QL_STANDARD;
@@ -513,6 +523,7 @@ AudioData::parse_wave_header(lame_t& gfp)
             }
         }
     }
+
     if (is_wav) {
         if (format_tag != WAVE_FORMAT_PCM && format_tag != WAVE_FORMAT_IEEE_FLOAT) {
             cerr << "ERROR: Unsupported data format: " << std::hex << format_tag << endl;
@@ -567,7 +578,6 @@ AudioData::open_wave_file(lame_t& gfp, char const* infile)
 
     if (this->m_rconfig.input_format == sf_unknown) {
         DEBUG::ERR("unknown format");
-        //close_file();
         return nullptr;
     }
 
@@ -598,6 +608,7 @@ AudioData::init_outfile(const string infile, const string outfile)
     *(it)     = '3';
 
     m_ofstream = new ofstream(m_outfile, std::ios::binary);
+
     return (this->m_ofstream != NULL);
 }
 
@@ -635,6 +646,7 @@ AudioData::init(string infile, string outfile)
         cerr << "ERROR: fatal error during initialization" << endl;
         return false;
     }
+
     switch (AudioData::encoding_quality) {
     case QL_BEST:
         lame_set_preset(m_gf, INSANE);

@@ -1,78 +1,23 @@
-#include "common.h"
-#include "thread.h"
-#include "utils.h"
-#include "audio.h"
+/**
+ * @file        main.cpp
+ * @version     0.9
+ * @brief       MP3enc_cpp main application source
+ * @date        Mar 4, 2020
+ * @author      Siwon Kang (kkangshawn@gmail.com)
+ */
 
+#include "main.h"
+
+#include <vector>
 #include <dirent.h>
 
 using namespace std;
 
-class MP3enc : public Utils, DEBUG {
-public:
-    static MP3enc* getInstance(int argc, char** argv);
-    static int main(int argc, char** argv);
-    void freeInstance();
-    void showUsage();
-
-private:
-    struct Options {
-        string          inPath;
-        string          outPath;
-        bool            recursive;
-        bool            verbose;
-    };
-
-    MP3enc() : m_opt{ {}, {}, false, false } {}
-    virtual ~MP3enc() {}
-
-    bool parseOption(int argc, char** argv);
-    void checkPath(string path);
-
-    Options m_opt;
-    static MP3enc* m_instance;
-    static size_t refCnt;
-};
 MP3enc* MP3enc::m_instance = nullptr;
 size_t MP3enc::refCnt = 0;
 
-MP3enc* MP3enc::getInstance(int argc, char** argv)
-{
-    if (!m_instance) {
-        m_instance = new MP3enc();
-        if (!m_instance) {
-            DEBUG::ERR("Failed to allocate memory");
-            return nullptr;
-        }
-    }
-
-    if (m_instance->parseOption(argc, argv) == false) {
-        DEBUG::ERR("Failed to parse options");
-        m_instance->freeInstance();
-        return nullptr;
-    }
-
-    refCnt++;
-
-    return m_instance;
-}
-
-void MP3enc::freeInstance()
-{
-    if (!m_instance) {
-        DEBUG::ERR("No instance to free");
-        return;
-    }
-
-    if (refCnt > 0) {
-        refCnt--;
-    }
-    if (refCnt == 0) {
-        delete m_instance;
-        m_instance = nullptr;
-    }
-}
-
-void MP3enc::showUsage()
+void
+MP3enc::showUsage()
 {
     cout << "Usage:" << endl;
     cout << "   MP3enc_cpp <input_directory | input_filename [-o <output_filename>]> [OPTIONS]" << endl;
@@ -89,6 +34,67 @@ void MP3enc::showUsage()
     cout << "   MP3enc_cpp wav_dir";
     cout << DELIMITER;
     cout << " -r -q fast -v" << endl;
+}
+
+void
+MP3enc::checkPath(string path)
+{
+    if (path.size() < 1) {
+        cerr << "ERROR: Input file is null" << endl;
+        return;
+    }
+    if (path.back() == DELIMITER) {
+        path.pop_back();
+    }
+
+    DIR* dir;
+    struct dirent* dir_ent;
+
+    dir = opendir(path.c_str());
+    if (!dir) {
+        /* process single file */
+        ifstream infile(path);
+        if (!infile.is_open()) {
+            cerr << "ERROR: Failed to find " << path << endl;
+            return;
+        }
+        AudioData adata(path, m_opt.outPath);
+        adata.start();
+        adata.join();
+        return;
+    }
+
+    vector<AudioData*> v;
+    while ((dir_ent = readdir(dir)) != NULL) {
+        string fullPath = path + DELIMITER + dir_ent->d_name;
+        switch (dir_ent->d_type) {
+        case DT_DIR:
+            if (m_opt.recursive && scmp(dir_ent->d_name, ".") && scmp(dir_ent->d_name, "..")) {
+                checkPath(fullPath);
+            }
+            break;
+        case DT_REG:
+            if (is_wav(dir_ent->d_name)) {
+                if (!m_opt.outPath.empty()) {
+                    m_opt.outPath.clear();
+                    DEBUG::WARN("Output filename(-o) option is ignored in case of decoding directory");
+                }
+                AudioData* adata = new AudioData(fullPath, m_opt.outPath);
+                adata->start();
+                v.push_back(adata);
+            }
+            break;
+        case DT_LNK:
+            break;
+        default:
+            break;
+        }
+    }
+    for (AudioData* d : v) {
+        d->join();
+        delete d;
+    }
+    closedir(dir);
 }
 
 bool
@@ -150,67 +156,46 @@ MP3enc::parseOption(int argc, char** argv)
 }
 
 void
-MP3enc::checkPath(string path)
+MP3enc::freeInstance()
 {
-    if (path.size() < 1) {
-        cerr << "ERROR: Input file is null" << endl;
-        return;
-    }
-    if (path.back() == DELIMITER) {
-        path.pop_back();
-    }
-
-    DIR* dir;
-    struct dirent* dir_ent;
-
-    dir = opendir(path.c_str());
-    if (!dir) {
-        /* process single file */
-        ifstream infile(path);
-        if (!infile.is_open()) {
-            cerr << "ERROR: Failed to find " << path << endl;
-            return;
-        }
-        AudioData adata(path, m_opt.outPath);
-        adata.start();
-        adata.join();
+    if (!m_instance) {
+        DEBUG::ERR("No instance to free");
         return;
     }
 
-    vector<AudioData*> v;
-    while ((dir_ent = readdir(dir)) != NULL) {
-        string fullPath = path + DELIMITER + dir_ent->d_name;
-        switch (dir_ent->d_type) {
-        case DT_DIR:
-            if (m_opt.recursive && scmp(dir_ent->d_name, ".") && scmp(dir_ent->d_name, "..")) {
-                checkPath(fullPath);
-            }
-            break;
-        case DT_REG:
-            if (isWAV(dir_ent->d_name)) {
-                if (!m_opt.outPath.empty()) {
-                    m_opt.outPath.clear();
-                    DEBUG::WARN("Output filename(-o) option is ignored in case of decoding directory");
-                }
-                AudioData* adata = new AudioData(fullPath, m_opt.outPath);
-                adata->start();
-                v.push_back(adata);
-            }
-            break;
-        case DT_LNK:
-            break;
-        default:
-            break;
-        }
+    if (refCnt > 0) {
+        refCnt--;
     }
-    for (AudioData* d : v) {
-        d->join();
-        delete d;
+    if (refCnt == 0) {
+        delete m_instance;
+        m_instance = nullptr;
     }
-    closedir(dir);
 }
 
-int MP3enc::main(int argc, char** argv)
+MP3enc*
+MP3enc::getInstance(int argc, char** argv)
+{
+    if (!m_instance) {
+        m_instance = new MP3enc();
+        if (!m_instance) {
+            DEBUG::ERR("Failed to allocate memory");
+            return nullptr;
+        }
+    }
+
+    if (m_instance->parseOption(argc, argv) == false) {
+        DEBUG::ERR("Failed to parse options");
+        m_instance->freeInstance();
+        return nullptr;
+    }
+
+    refCnt++;
+
+    return m_instance;
+}
+
+int
+MP3enc::main(int argc, char** argv)
 {
     cout << "MP3enc_cpp v" << VERSION << endl;
 

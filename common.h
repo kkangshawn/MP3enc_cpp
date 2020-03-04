@@ -1,3 +1,11 @@
+/**
+ * @file        common.h
+ * @version     0.9
+ * @brief       MP3enc_cpp common header
+ * @date        Mar 4, 2020
+ * @author      Siwon Kang (kkangshawn@gmail.com)
+ */
+
 #ifndef _COMMON_H
 #define _COMMON_H
 
@@ -9,4 +17,4 @@
 
 #define VERSION "0.9"
 
-#endif
+#endif  /* _COMMON_H */

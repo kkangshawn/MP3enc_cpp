@@ -1,6 +1,6 @@
 /**
  * @file        main.h
- * @version     0.9
+ * @version     1.0
  * @brief       MP3enc_cpp main application header
  * @date        Mar 4, 2020
  * @author      Siwon Kang (kkangshawn@gmail.com)

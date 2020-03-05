@@ -1,6 +1,6 @@
 /**
  * @file        audio.h
- * @version     0.9
+ * @version     1.0
  * @brief       MP3enc_cpp audio data module header
  * @date        Mar 4, 2020
  * @author      Siwon Kang (kkangshawn@gmail.com)

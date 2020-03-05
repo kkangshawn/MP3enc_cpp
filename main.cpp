@@ -9,8 +9,12 @@
 #include "main.h"
 
 #include <vector>
+#include <time.h>
+#if defined __linux
 #include <dirent.h>
-
+#elif defined _WIN32
+#include <Windows.h>
+#endif
 using namespace std;
 
 MP3enc* MP3enc::m_instance = nullptr;
@@ -37,7 +41,7 @@ MP3enc::showUsage()
 }
 
 void
-MP3enc::checkPath(string path)
+MP3enc::checkPath(string path, vector<AudioData*>& v)
 {
     if (path.size() < 1) {
         cerr << "ERROR: Input file is null" << endl;
@@ -47,6 +51,7 @@ MP3enc::checkPath(string path)
         path.pop_back();
     }
 
+#if defined __linux
     DIR* dir;
     struct dirent* dir_ent;
 
@@ -64,13 +69,12 @@ MP3enc::checkPath(string path)
         return;
     }
 
-    vector<AudioData*> v;
     while ((dir_ent = readdir(dir)) != NULL) {
         string fullPath = path + DELIMITER + dir_ent->d_name;
         switch (dir_ent->d_type) {
         case DT_DIR:
             if (m_opt.recursive && scmp(dir_ent->d_name, ".") && scmp(dir_ent->d_name, "..")) {
-                checkPath(fullPath);
+                checkPath(fullPath, v);
             }
             break;
         case DT_REG:
@@ -90,11 +94,56 @@ MP3enc::checkPath(string path)
             break;
         }
     }
-    for (AudioData* d : v) {
-        d->join();
-        delete d;
-    }
+
     closedir(dir);
+#elif defined _WIN32
+    HANDLE hFind;
+    WIN32_FIND_DATAA data;
+
+    hFind = FindFirstFileA(path.c_str(), &data);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        cerr << "ERROR: Failed to find " << path << endl;
+        return;
+    }
+    if (data.dwFileAttributes == FILE_ATTRIBUTE_ARCHIVE ||
+            data.dwFileAttributes == FILE_ATTRIBUTE_NORMAL)
+    {
+        AudioData* adata = new AudioData(path, m_opt.outPath);
+        adata->start();
+        v.push_back(adata);
+        return;
+    }
+    else if (data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+    {
+        string findPath = path + DELIMITER + "*";
+        hFind = FindFirstFileA(findPath.c_str(), &data);
+
+        do
+        {
+            string fullPath = path + DELIMITER + data.cFileName;
+            if ((data.dwFileAttributes == FILE_ATTRIBUTE_ARCHIVE ||
+                        data.dwFileAttributes == FILE_ATTRIBUTE_NORMAL) && is_wav(data.cFileName))
+            {
+                if (!m_opt.outPath.empty())
+                {
+                    m_opt.outPath.clear();
+                    DEBUG::WARN("Output filename(-o) option is ignored in case of decoding directory");
+                }
+                AudioData* adata = new AudioData(fullPath, m_opt.outPath);
+                adata->start();
+                v.push_back(adata);
+            }
+            else if (data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY &&
+                m_opt.recursive &&
+                scmp(data.cFileName, ".") && scmp(data.cFileName, ".."))
+            {
+                checkPath(fullPath, v);
+            }
+        } while (FindNextFileA(hFind, &data));
+    }
+    FindClose(hFind);
+#endif
 }
 
 bool
@@ -150,7 +199,12 @@ MP3enc::parseOption(int argc, char** argv)
             m_opt.inPath = argv[i];
         }
     }
-    checkPath(m_opt.inPath);
+    vector<AudioData*> filelist = {};
+    checkPath(m_opt.inPath, filelist);
+    for (AudioData* d : filelist) {
+        d->join();
+        delete d;
+    }
 
     return true;
 }

@@ -30,7 +30,11 @@ public:
     AudioData(std::string infile, std::string outfile) : m_ifstream(nullptr), m_ofstream(nullptr),
                 m_infile{}, m_outfile{}, m_init(false), m_count_samples_carefully(0),
                 m_pcm_is_unsigned_8bit(0), m_pcm_is_ieee_float(0), m_pcmbitwidth(0),
-                m_num_samples_read(0), m_rconfig{sf_unknown, 0} { m_init = init(infile, outfile); }
+                m_pcm32{ {}, 0, 0, 0, 0, 0 }, m_pcm16{ {}, 0, 0, 0, 0, 0 },
+                m_num_samples_read(0), m_rconfig{SOUNDFORMAT::sf_unknown, 0}
+    {
+        m_init = init(infile, outfile);
+    }
 
     virtual ~AudioData() {
         close_file();
@@ -62,7 +66,7 @@ public:
 
 private:
     static const int SAMPLE_SIZE = 1152;
-    enum SOUNDFORMAT {
+    enum class SOUNDFORMAT {
         sf_unknown,
         sf_raw,
         sf_wave,

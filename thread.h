@@ -20,7 +20,7 @@
  */
 class Thread {
 public:
-    Thread() : m_thread(0), m_is_running(false) {}
+    Thread() : m_thread{}, m_is_running(false) {}
 
     /**
      * @fn      void start()

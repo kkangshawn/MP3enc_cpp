@@ -70,7 +70,7 @@ private:
      * @brief   A function to process input path. This can handle both single file and a directory.
      * @param [in]  path    input path
      */
-    void checkPath(std::string path);
+    void checkPath(std::string path, std::vector<AudioData*>& v);
 
     Options         m_opt;          /**< input arguments */
     static MP3enc*  m_instance;     /**< pointer to the instance */

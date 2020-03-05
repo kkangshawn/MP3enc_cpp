@@ -210,6 +210,7 @@ AudioData::lame_encoder_loop(void* data)
     size_t          tagsize;
     int             buf[2][SAMPLE_SIZE];
     unsigned char   mp3buf[LAME_MAXMP3BUFFER];
+    ostringstream   msg;
 
     for (int i = 0; i < LAME_MAXMP3BUFFER; i++) {
         mp3buf[i] = 0;
@@ -218,31 +219,32 @@ AudioData::lame_encoder_loop(void* data)
     size_t id3v2_size;
     id3v2_size = lame_get_id3v2_tag(m_gf, 0, 0);
 
-    cout << "Start encoding [" << m_infile << " -> " << m_outfile << "]";
+    msg << "Start encoding [" << m_infile << " -> " << m_outfile << "]";
     if (DEBUG::IS_SET()) {
-        cout << " as " << 1.e-3 * lame_get_out_samplerate(m_gf) << " KHz ";
+        msg << " as " << (1.e-3 * lame_get_out_samplerate(m_gf)) << "KHz ";
         static const char *mode_names[2][4] = {
             {"stereo", "j-stereo", "dual-ch", "single-ch"},
             {"stereo", "force-ms", "dual-ch", "single-ch"}};
-        cout << mode_names[lame_get_force_ms(m_gf)][lame_get_mode(m_gf)] <<
-            " MPEG-" << 2 - lame_get_version(m_gf) <<
+        msg << mode_names[lame_get_force_ms(m_gf)][lame_get_mode(m_gf)] << " MPEG-" <<
+            (2 - lame_get_version(m_gf)) <<
             (lame_get_out_samplerate(m_gf) < 16000 ? ".5" : "") << " LAYER III ";
         switch (lame_get_VBR(m_gf)) {
         case vbr_rh:
-            cout << "quality: " << lame_get_quality(m_gf);
+            msg << "quality: " << lame_get_quality(m_gf);
         case vbr_mt:
         case vbr_mtrh:
-            cout << "VBR(q=" << lame_get_VBR_quality(m_gf) <<  ")";
+            msg << "VBR(q=" << lame_get_VBR_quality(m_gf) << ")";
             break;
         case vbr_abr:
-            cout << "average " << lame_get_VBR_mean_bitrate_kbps(m_gf) << " kbps quality: " << lame_get_quality(m_gf);
+            msg << "average " << lame_get_VBR_mean_bitrate_kbps(m_gf) <<
+                " kbps quality: " << lame_get_quality(m_gf);
             break;
         default:
-            cout << lame_get_brate(m_gf) << " kbps quality: " << lame_get_quality(m_gf);
+            msg << lame_get_brate(m_gf) << " kbps quality: " << lame_get_quality(m_gf);
             break;
         }
     }
-    cout << endl;
+    cout << msg.str() << endl;
 
     do {
         iread = get_audio(m_gf, buf);
@@ -392,19 +394,19 @@ AudioData::set_skip_start_and_end()
     int skip_end = 0;
 
     switch (m_rconfig.input_format) {
-    case sf_mp123:
+    case SOUNDFORMAT::sf_mp123:
         break;
-    case sf_mp3:
+    case SOUNDFORMAT::sf_mp3:
         skip_start = 528 + 1;
         skip_end = 0 - (528 + 1);
         break;
-    case sf_mp2:
-    case sf_mp1:
+    case SOUNDFORMAT::sf_mp2:
+    case SOUNDFORMAT::sf_mp1:
         skip_start += 240 + 1;
         break;
-    case sf_raw:
-    case sf_wave:
-    case sf_aiff:
+    case SOUNDFORMAT::sf_raw:
+    case SOUNDFORMAT::sf_wave:
+    case SOUNDFORMAT::sf_aiff:
     default:
         break;
     }
@@ -440,7 +442,7 @@ AudioData::parse_file_header(lame_t& gfp)
         int const ret = parse_wave_header(gfp);
         if (ret > 0) {
             this->m_count_samples_carefully = 1;
-            return sf_wave;
+            return SOUNDFORMAT::sf_wave;
         } else if (ret < 0) {
             cout << "WARNING: corrupt or unsupported WAVE format" << endl;
         }
@@ -448,7 +450,7 @@ AudioData::parse_file_header(lame_t& gfp)
         cout << "WARNING: unsupported audio format" << endl;
     }
 
-    return sf_unknown;
+    return SOUNDFORMAT::sf_unknown;
 }
 
 int
@@ -570,13 +572,13 @@ AudioData::open_wave_file(lame_t& gfp, char const* infile)
         return nullptr;
     }
 
-    if (this->m_rconfig.input_format == sf_raw) {
+    if (this->m_rconfig.input_format == SOUNDFORMAT::sf_raw) {
         DEBUG::WARN("Assuming raw pcm input file");
     } else {
         this->m_rconfig.input_format = parse_file_header(gfp);
     }
 
-    if (this->m_rconfig.input_format == sf_unknown) {
+    if (this->m_rconfig.input_format == SOUNDFORMAT::sf_unknown) {
         DEBUG::ERR("unknown format");
         return nullptr;
     }

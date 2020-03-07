@@ -12,9 +12,11 @@ WAV to MP3 Encoder, written in C++
 - Windows: build by Microsoft Visual Studio 2019 project
 
 ## Note for Linux system
-- Some system may require glibc-static library.
+- Some systems like fedora, centos, Amazon Linux may require glibc-static library.
 ```sh
-dnf install glibc-static
+$ dnf install glibc-static
+or
+$ sudo yum install glibc-static
 ```
 - If arch does not match,\
  . build lame static library and install or copy the file(libmp3lame.a) to ./lib

@@ -1,7 +1,0 @@
-<map id="main.h" name="main.h">
-<area shape="rect" id="node2" href="$dc/d54/common_8h.html" title="MP3enc_cpp common header. " alt="" coords="109,229,192,256"/>
-<area shape="rect" id="node7" href="$da/d09/audio_8h.html" title="MP3enc_cpp audio data module header. " alt="" coords="213,80,277,107"/>
-<area shape="rect" id="node8" href="$d5/d60/utils_8h.html" title="MP3enc_cpp utility functions header. " alt="" coords="35,155,93,181"/>
-<area shape="rect" id="node6" href="$db/d16/debug_8h.html" title="MP3enc_cpp debug module header. " alt="" coords="71,304,139,331"/>
-<area shape="rect" id="node10" href="$db/dd5/thread_8h.html" title="MP3enc_cpp thread module header. " alt="" coords="405,155,475,181"/>
-</map>

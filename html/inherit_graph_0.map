@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$de/d5e/classDEBUG.html" title="DEBUG class for debug print functions. This class is supposed to be used as global functions..." alt="" coords="5,107,76,133"/>
-<area shape="rect" id="node2" href="$d5/d4a/classAudioData.html" title="class for processing audio data which is strongly involved with LAME library. Many are derived from L..." alt="" coords="124,56,207,83"/>
-<area shape="rect" id="node3" href="$d7/dae/classMP3enc.html" title="main class for MP3enc application. Designed as singleton to prevent from any conflicts by multiple ac..." alt="" coords="130,107,201,133"/>
-<area shape="rect" id="node4" href="$d0/d51/classThread.html" title="Thread class using pthread library. This class is supposed to be used by other classes inherit this ..." alt="" coords="9,5,72,32"/>
-<area shape="rect" id="node5" href="$dc/dc5/classUtils.html" title="Class for utility functions. Intended to be used by inheritance. " alt="" coords="16,56,65,83"/>
-</map>
